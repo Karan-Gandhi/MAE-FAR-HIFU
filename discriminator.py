@@ -3,14 +3,13 @@ import torch.nn as nn
 
 
 class NLayerDiscriminator(nn.Module):
-    def __init__(self, config):
+    def __init__(self, in_channel=3):
         super().__init__()
         kw = 4
         padw = int(np.ceil((kw - 1.0) / 2))
-        input_nc = config['input_nc']
 
         self.conv1 = nn.Sequential(
-            nn.Conv2d(in_channels=input_nc, out_channels=64, kernel_size=kw, stride=2, padding=padw),
+            nn.Conv2d(in_channels=in_channel, out_channels=64, kernel_size=kw, stride=2, padding=padw),
             nn.LeakyReLU(0.2, inplace=True),
         )
 
