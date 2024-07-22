@@ -108,6 +108,7 @@ if __name__ == "__main__":
     acr.train()
     
     for epoch in range(args.epochs):
+        current_losses = []
         for items in tqdm(dataloader):
             items['img'] = items['img'].to(device)
             items['mask'] = items['mask'].to(device)
@@ -129,6 +130,8 @@ if __name__ == "__main__":
                 g_optimizer.zero_grad()
                 loss.backward()
                 g_optimizer.step()
+                
+                current_losses.append(loss.item())
             else:
                 # Discriminator
                 discriminator.requires_grad_(True)
@@ -145,3 +148,5 @@ if __name__ == "__main__":
             g_sche.step()
         else:
             d_sche.step()
+            
+        print(f"Epoch: {epoch}, Losses: {sum(current_losses) / len(current_losses)}, lr: {g_sche.get_lr()}")
