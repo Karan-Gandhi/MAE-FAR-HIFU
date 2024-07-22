@@ -20,7 +20,7 @@ from pathlib import Path
 import torch
 import torch.distributed as dist
 import torch.nn as nn
-from torch import inf
+from torch._six import inf
 
 
 class SmoothedValue(object):
