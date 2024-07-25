@@ -53,7 +53,7 @@ class GatedConvolutions(nn.Module):
         [B, _, _, _] = feat.shape
         feat_coord = self.make_coord([H, W], flatten=False).to(feat.device).permute(2, 0, 1)
         feat_coord = feat_coord.unsqueeze(0).expand(B, 2, H, W).to(feat.dtype)
-        print(feat_coord.shape)
+        # print(feat_coord.shape)
         feat = torch.cat([feat, feat_coord], dim=1)
         return feat
     

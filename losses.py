@@ -76,8 +76,8 @@ def discriminator_fake_loss(discr_fake_pred: torch.Tensor, mask=None):
     return sum_discr_loss.mean()
 
 class Losses:
-    def __init__(self, discriminator):
-        self.resnet = ResNetPL()
+    def __init__(self, discriminator, device):
+        self.resnet = ResNetPL(weights_path="/scratch/shreyans.jain/hifu/MAE-FAR-HIFU").to(device)
         self.discriminator = discriminator
         self.weights = {'l1': 10, 'perceptual': 30, 'adverserial': 10, 'featureMatching': 100}
         
@@ -111,7 +111,7 @@ class Losses:
         gen_img = y_hat
         gen_logits, _ = self.discriminator.forward(gen_img.detach())
         dis_real_loss, grad_penalty = discriminator_real_loss(real_batch=real_img_tmp, discr_real_pred=real_logits, gp_coef=0.001, do_GP=do_GP)
-        dis_fake_loss = discriminator_fake_loss(discr_fake_pred=gen_logits, mask=mask, args=self.adv_args)
+        dis_fake_loss = discriminator_fake_loss(discr_fake_pred=gen_logits, mask=mask)
         loss_D_all = dis_real_loss + dis_fake_loss + grad_penalty
 
         return loss_D_all

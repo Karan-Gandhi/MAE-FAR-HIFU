@@ -1,6 +1,6 @@
 import argparse
 import os
-import tqdm
+from tqdm import tqdm
 from PIL import Image
 
 import torch
@@ -78,7 +78,11 @@ if __name__ == "__main__":
     
     print("Preparing models")
     
-    mae = misc.get_mae_model(args.mae_model, mask_decoder=True).to(device)
+    mae = misc.get_mae_model('mae_vit_base_patch16', mask_decoder=True).to(device)
+    checkpoint = torch.load(args.mae_model, map_location='cpu')
+    msg = mae.load_state_dict(checkpoint['model'], strict=False)
+    print(msg)
+    
     mae.requires_grad_(False)
     mae.mask_decoder = True
     
@@ -103,7 +107,7 @@ if __name__ == "__main__":
     
     print("Training ACR")
 
-    losses = Losses()
+    losses = Losses(discriminator, device)
     mae.eval()
     acr.train()
     
@@ -119,34 +123,30 @@ if __name__ == "__main__":
                 mae_feats = mae_feats.detach()
                 scores = scores.detach()
             
-            if epoch % 2 == 0:
-                # Generator
-                discriminator.requires_grad_(False)
-                acr.requires_grad_(True)
-                
-                pred = acr.forward(items['img'], items['mask'], mae_feats, scores)
-                loss = losses.getLoss(pred, items['gt'], items['mask'])
+            # Generator
+            discriminator.requires_grad_(False)
+            acr.requires_grad_(True)
+            
+            pred = acr.forward(items['img'], items['mask'], mae_feats, scores)
+            loss = losses.getLoss(pred, items['gt'], items['mask'])
 
-                g_optimizer.zero_grad()
-                loss.backward()
-                g_optimizer.step()
-                
-                current_losses.append(loss.item())
-            else:
-                # Discriminator
-                discriminator.requires_grad_(True)
-                acr.requires_grad_(False)
+            g_optimizer.zero_grad()
+            loss.backward()
+            g_optimizer.step()
+            
+            current_losses.append(loss.item())
+            # Discriminator
+            discriminator.requires_grad_(True)
+            acr.requires_grad_(False)
 
-                pred = acr.forward(items['img'], items['mask'], mae_feats, scores)                
-                d_loss = losses.getDiscriminatorLoss(pred, items['img'], items['mask'])
+            pred = acr.forward(items['img'], items['mask'], mae_feats, scores)
+            d_loss = losses.getDiscriminatorLoss(pred, items['img'], items['mask'])
 
-                d_optimizer.zero_grad()
-                d_loss.backward()
-                d_optimizer.step()
-        
-        if epoch % 2 == 0:
-            g_sche.step()
-        else:
-            d_sche.step()
+            d_optimizer.zero_grad()
+            d_loss.backward()
+            d_optimizer.step()
+    
+        g_sche.step()
+        d_sche.step()
             
         print(f"Epoch: {epoch}, Losses: {sum(current_losses) / len(current_losses)}, lr: {g_sche.get_lr()}")
