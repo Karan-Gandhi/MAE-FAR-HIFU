@@ -178,7 +178,7 @@ if __name__ == "__main__":
             # Generator
             discriminator.requires_grad_(False)
             acr.requires_grad_(True)
-            
+                        
             pred = acr.forward(items['img'], items['mask'], mae_feats, scores)
             loss, other = losses.getLoss(pred, items['gt'], items['mask'])
 
