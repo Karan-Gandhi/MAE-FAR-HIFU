@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ACR.networks.ade20k import ModelBuilder
+from ade20k import ModelBuilder
 
 IMAGENET_MEAN = torch.FloatTensor([0.485, 0.456, 0.406])[None, :, None, None]
 IMAGENET_STD = torch.FloatTensor([0.229, 0.224, 0.225])[None, :, None, None]
